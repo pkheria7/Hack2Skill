@@ -6,8 +6,8 @@ import asyncio
 import json
 from typing import AsyncGenerator
 from fastapi import APIRouter, Request, HTTPException
-from sse_starlette.sse import EventSourceResponse
-from app.services.groq_service import ask_groq
+
+
 
 router = APIRouter()
 

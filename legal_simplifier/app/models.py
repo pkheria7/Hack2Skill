@@ -27,3 +27,15 @@ class ResultResp(BaseModel):
     parties: Optional[List[str]] = None
     clauses: List[Clause]
     ghost_clauses: List[Clause] = Field(default_factory=list)
+
+
+
+class ClauseDetail(BaseModel):
+    clause_id: int
+    original_text: str
+    risk: Literal["red", "yellow", "green", "ghost"]
+    eli5: str
+    rewrite_options: List[str]
+    legal_aids: List[dict]
+    video_script: dict
+    banner: Optional[str] = None
