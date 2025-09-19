@@ -1,1 +1,0 @@
-1. Error during text extraction: [Errno 2] No such file or directory: 'store/9f1532d6-9d42-404f-b314-bd8039b57d0d_rent_doc.pdf'
