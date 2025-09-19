@@ -40,6 +40,9 @@ async def upload_file(
     if not os.path.exists(STORE_DIR):
         os.makedirs(STORE_DIR)
 
+    with open(file_path, "wb") as f:
+        f.write(await file.read())
+
     # Perform text extraction if the file is a PDF
     if file_extension.lower() == "pdf":
         extracted_text = extract_text_from_pdf(file_path)
@@ -61,6 +64,7 @@ async def upload_file(
         return UploadResp(uid=uid, status="completed", message=groq_response)
 
     return UploadResp(uid=uid, status="failed", message="Unsupported file type")
+
 def extract_text_from_pdf(pdf_path: str) -> str:
     """
     Extract text directly from a PDF file using PyPDF2 and remove extra empty lines.
@@ -114,12 +118,12 @@ def prepare_groq_prompt(extracted_text: str) -> str:
         "1. Clause one text...\n"
         "2. Clause two text...\n"
         "...\n\n"
-        "If there are no clauses in the document, respond with:\n"
-        "'No clauses found.'\n\n"
-        "IMPORTANT: Ensure the output strictly follows the enumerated list format. "
+        "IMPORTANT: Ensure each clause starts with a number followed by a period (e.g., '1.', '2.', etc.). "
         "Do not include any additional text or explanations."
     )
     return prompt
+
+import re
 
 def call_groq_llm(prompt: str, uid: str) -> str:
     """
@@ -145,7 +149,10 @@ def call_groq_llm(prompt: str, uid: str) -> str:
 
         # Extract the content from the response
         if response.choices and response.choices[0].message.content:
-            clauses = response.choices[0].message.content.strip().split("\n")
+            raw_clauses = response.choices[0].message.content.strip()
+
+            # Use regex to extract clauses starting with a number followed by a period
+            clauses = re.findall(r"^\d+\.\s.*", raw_clauses, re.MULTILINE)
         else:
             return "No response from Groq LLM"
 
@@ -154,17 +161,14 @@ def call_groq_llm(prompt: str, uid: str) -> str:
         os.makedirs(clause_dir, exist_ok=True)
 
         # Save each clause as a separate file
-        clause_count = 0
-        for clause in clauses:
-            clause = clause.strip()
-            if clause:  # Skip empty lines
-                clause_count += 1
-                clause_file = os.path.join(clause_dir, f"{clause_count}.txt")
-                with open(clause_file, "w") as f:
-                    f.write(clause)
+        for idx, clause in enumerate(clauses, start=1):
+            clause_file = os.path.join(clause_dir, f"{idx}.txt")
+            with open(clause_file, "w") as f:
+                f.write(clause)
 
         return f"Clauses saved successfully in {clause_dir}"
 
     except Exception as e:
         logger.error("Error calling Groq LLM: %s", str(e))
         return f"Error calling Groq LLM: {str(e)}"
+    
