@@ -30,12 +30,20 @@ class ResultResp(BaseModel):
 
 
 
+from pydantic import BaseModel
+from typing import List, Dict, Optional, Union
+
 class ClauseDetail(BaseModel):
     clause_id: int
     original_text: str
-    risk: Literal["red", "yellow", "green", "ghost"]
+    risk: str
     eli5: str
     rewrite_options: List[str]
-    legal_aids: List[dict]
-    video_script: dict
+    ai_response: str
+    risk_after: str
+    next_actions: List[str]
+    legal_aids: List[Dict[str, str]]
+    video_script: Dict[str, Union[str, List[str]]]
     banner: Optional[str] = None
+
+

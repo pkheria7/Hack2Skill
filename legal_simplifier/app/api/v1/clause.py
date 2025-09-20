@@ -1,70 +1,96 @@
-# app/api/v1/clause.py
+import os
 import json
+import re
 from fastapi import APIRouter, HTTPException
 from app.models import ClauseDetail
-from app.services.llm_service import ask_groq
-from app.services.storage import load_clauses
+from app.config import ask_groq
 
-router = APIRouter()
+router = APIRouter(tags=["Clause Detail"])
 
-@router.get("/clause/{uid}/{clause_id}", response_model=ClauseDetail)
-async def get_clause(uid: str, clause_id: int):
-    clauses = load_clauses(uid)
+def get_clause_store(uid: str, clause_id: int) -> str:
+    """Fetch a clause text by UID and index from store/"""
+    doc_dir = os.path.join("store", uid)
+    if not os.path.exists(doc_dir):
+        raise HTTPException(404, "document not found")
 
-    if clause_id >= len(clauses):
+    files = sorted([f for f in os.listdir(doc_dir) if f.endswith(".txt")])
+    if clause_id >= len(files):
         raise HTTPException(404, "clause not found")
 
-    clause_text = clauses[clause_id]
+    with open(os.path.join(doc_dir, files[clause_id]), "r", encoding="utf-8") as f:
+        return f.read().strip()
 
-    # 1. Rewrite options
-    prompt_rewrite = (
-        "Suggest 3 fair, plain-language rewrite alternatives for this contract clause. "
-        "Reply ONLY JSON list of strings.\n\n"
-        f"Clause: {clause_text}"
-    )
-    try:
-        rewrite_options = json.loads(ask_groq(prompt_rewrite))
-    except:
-        rewrite_options = ["Each party pays its own legal costs."]
+@router.get("/clause/{uid}/{clause_id}", response_model=ClauseDetail)
+def clause_detail(uid: str, clause_id: int):
+    original_text = get_clause_store(uid, clause_id)
 
-    # 2. Video script
-    prompt_video = (
-        "Create a 15-second explainer script for this clause in 2-3 short lines. "
-        "Reply ONLY JSON: {\"title\":\"...\", \"script_lines\":[\"line1\",\"line2\"]}\n\n"
-        f"Clause: {clause_text}"
-    )
+    # Strict prompt for Groq
+    prompt = f"""
+You are an expert legal assistant. Analyze the following contract clause.
+
+STRICT INSTRUCTIONS:
+- Output ONLY valid JSON.
+- Evaluate clause risk.
+- Provide an ELI5 explanation.
+- Suggest rewrites that would make it safer.
+- Simulate negotiation stance and predict AI counter-response.
+- Suggest what the risk would be if the rewrite was applied.
+- Suggest next actions the user could take.
+
+Risk Rules:
+- green = safe / fair
+- yellow = caution
+- red = risky / predatory
+
+JSON format (strict):
+{{
+  "risk": "green|yellow|red",
+  "eli5": "short simple explanation",
+  "rewrite_options": ["better rewrite option 1", "better rewrite option 2"],
+  "ai_response": "how the counterparty might reply",
+  "risk_after": "green|yellow|red",
+  "next_actions": ["Accept", "Counter", "Ask-human-lawyer"]
+}}
+
+Clause: {original_text}
+"""
+
+
+
     try:
-        video_script = json.loads(ask_groq(prompt_video))
-    except:
-        video_script = {
-            "title": "Clause explainer",
-            "script_lines": ["This clause sets rules between parties.", "Understand before signing."]
+        ai_raw = ask_groq(prompt)
+
+        # Extract only JSON block using regex
+        match = re.search(r"\{.*\}", ai_raw, re.S)
+        if match:
+            ai_json = json.loads(match.group())
+        else:
+            raise ValueError("No JSON found in Groq response")
+
+    except Exception:
+        ai_json = {
+            "risk": "yellow",
+            "eli5": "Simplification unavailable",
+            "rewrite_options": ["Rephrase needed"]
         }
 
-    # 3. Placeholder risk + eli5 (later you can generate these in upload step)
-    risk = "yellow" if "indemnify" in clause_text.lower() else "green"
-    eli5 = "Simple explanation placeholder (to be AI-generated)."
-
-    # 4. Static legal aids
-    legal_aids = [
+    return ClauseDetail(
+    clause_id=clause_id,
+    original_text=original_text,
+    risk=ai_json.get("risk", "yellow"),
+    eli5=ai_json.get("eli5", "No explanation"),
+    rewrite_options=ai_json.get("rewrite_options", []),
+    ai_response=ai_json.get("ai_response", "No response generated"),
+    risk_after=ai_json.get("risk_after", "yellow"),
+    next_actions=ai_json.get("next_actions", ["Ask-human-lawyer"]),
+    legal_aids=[
         {"name": "Community Law Centre", "type": "community", "url": "https://communitylaw.example"},
         {"name": "QuickCall Lawyer", "type": "private", "url": "https://quickcall.example"}
-    ]
+    ],
+    video_script={
+        "title": "Clause explainer",
+        "script_lines": ["This clause sets rules between parties.", "Understand before signing."]
+    },
+    banner="🚨 Talk to a lawyer first" if ai_json.get("risk") == "red" else None
+)
 
-    # 5. Banner warnings
-    banner = None
-    if risk == "red":
-        banner = "🚨 Talk to a lawyer first"
-    elif risk == "yellow":
-        banner = "⚠️ Consider asking for clarification"
-
-    return ClauseDetail(
-        clause_id=clause_id,
-        original_text=clause_text,
-        risk=risk,
-        eli5=eli5,
-        rewrite_options=rewrite_options,
-        legal_aids=legal_aids,
-        video_script=video_script,
-        banner=banner
-    )

@@ -52,7 +52,7 @@ async def upload_file(
         if not os.path.exists(OCR_DIR):
             os.makedirs(OCR_DIR)
 
-        with open(ocr_file_path, "w") as ocr_file:
+        with open(ocr_file_path, "w", encoding="utf-8") as ocr_file:
             ocr_file.write(extracted_text)
 
         # Prepare the Groq prompt
@@ -163,7 +163,7 @@ def call_groq_llm(prompt: str, uid: str) -> str:
         # Save each clause as a separate file
         for idx, clause in enumerate(clauses, start=1):
             clause_file = os.path.join(clause_dir, f"{idx}.txt")
-            with open(clause_file, "w") as f:
+            with open(clause_file, "w", encoding="utf-8") as f:
                 f.write(clause)
 
         return f"Clauses saved successfully in {clause_dir}"
@@ -172,3 +172,4 @@ def call_groq_llm(prompt: str, uid: str) -> str:
         logger.error("Error calling Groq LLM: %s", str(e))
         return f"Error calling Groq LLM: {str(e)}"
     
+
