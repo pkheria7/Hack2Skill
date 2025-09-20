@@ -41,11 +41,11 @@ def create_app() -> FastAPI:
 
     # register sub-routers
     app.include_router(upload.router, prefix="/api/v1")
-    # app.include_router(result.router, prefix="/api/v1")
+    app.include_router(result.router, prefix="/api/v1")
     app.include_router(clause.router, prefix="/api/v1")
-    # app.include_router(insert_ghost.router, prefix="/api/v1")
+    app.include_router(insert_ghost.router, prefix="/api/v1")
     # app.include_router(negotiate.router, prefix="/api/v1")
-    # app.include_router(chat.router, prefix="/api/v1")
+    app.include_router(chat.router, prefix="/api/v1")
     # app.include_router(timeline.router, prefix="/api/v1")
     # app.include_router(export.router, prefix="/api/v1")
 

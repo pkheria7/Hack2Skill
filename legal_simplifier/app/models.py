@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional, Literal
+from typing import List, Optional, Literal, Dict, Union
 
 class UploadReq(BaseModel):
     doc_name: str
@@ -29,10 +29,7 @@ class ResultResp(BaseModel):
     ghost_clauses: List[Clause] = Field(default_factory=list)
 
 
-
-from pydantic import BaseModel
-from typing import List, Dict, Optional, Union
-
+# Extended models for chatbot
 class ClauseDetail(BaseModel):
     clause_id: int
     original_text: str
@@ -46,4 +43,8 @@ class ClauseDetail(BaseModel):
     video_script: Dict[str, Union[str, List[str]]]
     banner: Optional[str] = None
 
-
+class ChatRequest(BaseModel):
+    uid: str
+    question: str
+    session_id: Optional[str] = None
+     
