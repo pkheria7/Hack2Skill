@@ -42,6 +42,7 @@ def create_app() -> FastAPI:
     # register sub-routers
     app.include_router(upload.router, prefix="/api/v1")
     app.include_router(result.router, prefix="/api/v1")
+    app.include_router(videogen.router, prefix="/api/v1")
     # app.include_router(clause.router, prefix="/api/v1")
     app.include_router(insert_ghost.router, prefix="/api/v1")
     # app.include_router(negotiate.router, prefix="/api/v1")
@@ -65,3 +66,6 @@ if __name__ == "__main__":
         port=int(os.getenv("PORT", 8000)),
         reload=True,
     )
+
+
+    AIzaSyAitM1_HXTqgFgix7MlepjZ2SpDdF10I1c
