@@ -14,3 +14,5 @@ def ask_groq(prompt: str) -> str:
         max_tokens=512
     )
     return response.choices[0].message.content.strip()
+
+
