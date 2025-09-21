@@ -47,4 +47,26 @@ class ChatRequest(BaseModel):
     uid: str
     question: str
     session_id: Optional[str] = None
+
+from pydantic import BaseModel
+from typing import List
+
+class NegotiateRequest(BaseModel):
+    uid: str                      # unique document/session id
+    clause_id: int                # which clause is being negotiated
+    option: str                   # stance: "friendly", "firm", "aggressive"
+    current_risk: str             # "red", "yellow", "green"
+    original_clause: str           # full clause text being negotiated
+
+class NegotiateResponse(BaseModel):
+    clause_id: int
+    option: str
+    original_clause: str           # include original clause in response for context
+    ai_explanation: str            # explanation of suggested changes
+    counter_statements: List[str]  # AI-generated safer/better alternatives
+    risk_after: str                # updated risk level after negotiation
+    next_actions: List[str]        # possible next actions: Accept / Counter / Ask lawyer
+
+
+
      

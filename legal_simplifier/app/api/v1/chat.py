@@ -4,6 +4,7 @@ import uuid
 from fastapi import APIRouter, HTTPException
 from app.models import ChatRequest
 from app.config import ask_groq
+from fastapi import status
 
 router = APIRouter(tags=["Chat Assistant"])
 
@@ -149,3 +150,19 @@ async def get_session(session_id: str):
     with open(filepath, "r", encoding="utf-8") as f:
         data = json.load(f)
     return {"session_id": session_id, "history": data}
+
+@router.delete("/sessions/{session_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_session(session_id: str):
+    """Delete a session and its saved history"""
+    filepath = os.path.join(SESSIONS_DIR, f"{session_id}.json")
+    
+    # Remove from memory
+    if session_id in conversation_history:
+        del conversation_history[session_id]
+
+    # Remove from disk
+    if os.path.exists(filepath):
+        os.remove(filepath)
+        return  # 204 has no body
+    
+    raise HTTPException(404, "Session not found")
