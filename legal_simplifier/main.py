@@ -21,6 +21,7 @@ from app.api.v1 import (
     chat,
     timeline,
     export,
+    videogen
 )
 
 def create_app() -> FastAPI:
@@ -46,6 +47,7 @@ def create_app() -> FastAPI:
     app.include_router(insert_ghost.router, prefix="/api/v1")
     app.include_router(negotiate.router, prefix="/api/v1")
     app.include_router(chat.router, prefix="/api/v1")
+    app.include_router(videogen.router, prefix="/api/v1")
     # app.include_router(timeline.router, prefix="/api/v1")
     # app.include_router(export.router, prefix="/api/v1")
 

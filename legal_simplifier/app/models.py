@@ -33,7 +33,6 @@ class ResultResp(BaseModel):
 class ClauseDetail(BaseModel):
     clause_id: int
     original_text: str
-    risk: str
     eli5: str
     rewrite_options: List[str]
     ai_response: str
@@ -52,20 +51,16 @@ from pydantic import BaseModel
 from typing import List
 
 class NegotiateRequest(BaseModel):
-    uid: str                      # unique document/session id
-    clause_id: int                # which clause is being negotiated
-    option: str                   # stance: "friendly", "firm", "aggressive"
-    current_risk: str             # "red", "yellow", "green"
-    original_clause: str           # full clause text being negotiated
+    uid: str                        # user id
+    clauseId: int                   # clause id
+    tone: str                       # friendly / firm / aggressive
+    origin: str                     # original clause text
+    risk: str              # current risk level of the clause (red, yellow, green)
 
 class NegotiateResponse(BaseModel):
-    clause_id: int
-    option: str
-    original_clause: str           # include original clause in response for context
-    ai_explanation: str            # explanation of suggested changes
-    counter_statements: List[str]  # AI-generated safer/better alternatives
-    risk_after: str                # updated risk level after negotiation
-    next_actions: List[str]        # possible next actions: Accept / Counter / Ask lawyer
+    rewritten_clause: str          # include original clause in response for context
+    ai_explanation: str            # explanation of suggested changes # AI-generated safer/better alternatives
+    risk_after: str                # updated risk level after negotiation        # possible next actions: Accept / Counter / Ask lawyer
 
 
 

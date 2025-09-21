@@ -77,7 +77,6 @@ Clause: {original_text}
     return ClauseDetail(
     clause_id=clause_id,
     original_text=original_text,
-    risk=ai_json.get("risk", "yellow"),
     eli5=ai_json.get("eli5", "No explanation"),
     rewrite_options=ai_json.get("rewrite_options", []),
     ai_response=ai_json.get("ai_response", "No response generated"),
