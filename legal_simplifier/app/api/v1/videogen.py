@@ -29,6 +29,7 @@ def generate_video_task(job_id: str, prompt: str):
 
         # Step 2: Call the generate_videos model (hypothetical)
         # This part is based on how other Google generative AI APIs work
+        # Note: The 'generate_videos' model and method are hypothetical for this example.
         operation = client.models.generate_videos(
             model="veo-3.0-generate-preview",
             prompt=prompt,
